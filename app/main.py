@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.api.health import router as health_router
+from app.api.document import router as document_router
 
 from app.core.config import APP_NAME, APP_VERSION
 app = FastAPI(
@@ -10,8 +11,8 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
-from app.api.system import router as system_router
-app.include_router(system_router)
+app.include_router(document_router)
+
 @app.get("/")
 def home():
     return {
@@ -20,3 +21,4 @@ def home():
     "version": APP_VERSION,
     "message": "Chào mừng bạn đến với Hành Chính AI!"
 }
+    from app.core.config import APP_NAME, APP_VERSION
