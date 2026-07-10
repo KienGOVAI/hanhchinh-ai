@@ -1,6 +1,19 @@
-.venv/
+# Python
 __pycache__/
 *.pyc
+.venv/
+
+# Environment
 .env
-.vscode/
+
+# Output
 output/
+
+# VSCode
+.vscode/
+
+# Logs
+*.log
+
+# Cache
+.pytest_cache/
