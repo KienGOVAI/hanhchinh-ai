@@ -17,3 +17,26 @@ output/
 
 # Cache
 .pytest_cache/
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment
+.env
+
+# Output
+output/
+*.docx
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store

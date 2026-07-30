@@ -8,44 +8,44 @@ class CongVanTemplate(BaseDocument):
 
     def build(self, data):
 
-        # ===============================
+        # =====================================
         # HEADER
-        # ===============================
+        # =====================================
 
         self.create_header(
             agency="ỦY BAN NHÂN DÂN",
             unit="XÃ YÊN MINH",
             location="Yên Minh",
             date_text="ngày ..... tháng ..... năm 2026",
-            number="...../UBND-VP"
+            number="...../UBND-VP",
         )
 
-        # ===============================
-        # TIÊU ĐỀ
-        # ===============================
+        # =====================================
+        # TITLE
+        # =====================================
 
         self.create_title(
             title="CÔNG VĂN",
-            subtitle=data.title
+            subtitle=data.title,
         )
 
-        # ===============================
-        # NỘI DUNG
-        # ===============================
+        # =====================================
+        # CONTENT
+        # =====================================
 
         self.create_content(
-            data.content
+            data.content,
         )
 
         self.blank()
 
-        # ===============================
-        # CHỮ KÝ
-        # ===============================
+        # =====================================
+        # SIGNATURE
+        # =====================================
 
         self.create_signature(
             position="CHỦ TỊCH",
-            signer="Nguyễn Văn A"
+            signer="Nguyễn Văn A",
         )
 
         return self.doc

@@ -1,7 +1,16 @@
 from docx import Document
-from docx.shared import Pt, Cm
+from docx.shared import Cm, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn
+
+from app.templates.styles import (
+    apply_font,
+    apply_paragraph_style,
+    apply_page_style,
+    apply_normal_style,
+    ALIGN_CENTER,
+    ALIGN_JUSTIFY,
+    ALIGN_RIGHT,
+)
 
 
 class BaseDocument:
@@ -16,36 +25,17 @@ class BaseDocument:
     # =====================================================
 
     def setup_page(self):
-
-        section = self.doc.sections[0]
-
-        section.top_margin = Cm(2)
-
-        section.bottom_margin = Cm(2)
-
-        section.left_margin = Cm(3)
-
-        section.right_margin = Cm(2)
+        apply_page_style(self.doc)
 
     # =====================================================
     # Font mặc định
     # =====================================================
 
     def setup_font(self):
-
-        style = self.doc.styles["Normal"]
-
-        style.font.name = "Times New Roman"
-
-        style._element.rPr.rFonts.set(
-            qn("w:eastAsia"),
-            "Times New Roman"
-        )
-
-        style.font.size = Pt(13)
+        apply_normal_style(self.doc)
 
     # =====================================================
-    # Tạo Paragraph
+    # Paragraph chuẩn
     # =====================================================
 
     def paragraph(
@@ -53,34 +43,220 @@ class BaseDocument:
         text="",
         bold=False,
         italic=False,
-        align=WD_ALIGN_PARAGRAPH.LEFT,
+        align=ALIGN_JUSTIFY,
         size=13,
     ):
 
         p = self.doc.add_paragraph()
 
-        p.alignment = align
+        apply_paragraph_style(
+            p,
+            align=align,
+        )
 
         run = p.add_run(text)
 
-        run.bold = bold
-        run.italic = italic
-
-        run.font.name = "Times New Roman"
-
-        run._element.rPr.rFonts.set(
-            qn("w:eastAsia"),
-            "Times New Roman"
+        apply_font(
+            run,
+            size=size,
+            bold=bold,
+            italic=italic,
         )
-
-        run.font.size = Pt(size)
 
         return p
 
     # =====================================================
-    # Header chuẩn Nghị định 30
+    # Thêm nhiều đoạn văn
     # =====================================================
 
+    def add_text(
+        self,
+        text,
+        align=ALIGN_JUSTIFY,
+    ):
+
+        for line in text.split("\n"):
+
+            line = line.strip()
+
+            if not line:
+                continue
+
+            self.paragraph(
+                text=line,
+                align=align,
+            )
+    # =====================================================
+    # Tiêu đề dùng chung
+    # =====================================================
+
+    def add_heading(
+        self,
+        text,
+        level=1,
+        align=ALIGN_CENTER,
+    ):
+
+        if level == 1:
+            size = 15
+            bold = True
+
+        elif level == 2:
+            size = 14
+            bold = True
+
+        elif level == 3:
+            size = 13
+            bold = True
+
+        else:
+            size = 13
+            bold = False
+
+        p = self.doc.add_paragraph()
+
+        apply_paragraph_style(
+            p,
+            align=align,
+            indent=False,
+        )
+
+        run = p.add_run(text)
+
+        apply_font(
+            run,
+            size=size,
+            bold=bold,
+        )
+
+        return p
+    # =====================================================
+    # Header chuẩn Nghị định 30
+    # =====================================================
+    # =====================================================
+    # Bảng dùng chung
+    # =====================================================
+
+    def add_table(
+        self,
+        headers,
+        rows,
+    ):
+
+        table = self.doc.add_table(
+            rows=1,
+            cols=len(headers)
+        )
+
+        table.style = "Table Grid"
+
+        # -------------------------
+        # Header
+        # -------------------------
+
+        hdr = table.rows[0].cells
+
+        for i, text in enumerate(headers):
+
+            p = hdr[i].paragraphs[0]
+
+            apply_paragraph_style(
+                p,
+                align=ALIGN_CENTER,
+                indent=False,
+            )
+
+            run = p.add_run(str(text))
+
+            apply_font(
+                run,
+                bold=True,
+            )
+
+        # -------------------------
+        # Data
+        # -------------------------
+
+        for row in rows:
+
+            cells = table.add_row().cells
+
+            for i, value in enumerate(row):
+
+                p = cells[i].paragraphs[0]
+
+                apply_paragraph_style(
+                    p,
+                    align=ALIGN_LEFT,
+                    indent=False,
+                )
+
+                run = p.add_run(str(value))
+
+                apply_font(run)
+
+        return table
+        # =====================================================
+    # Nơi nhận
+    # =====================================================
+
+    def add_recipient(self, recipients):
+
+        p = self.doc.add_paragraph()
+
+        apply_paragraph_style(
+            p,
+            align=ALIGN_LEFT,
+            indent=False,
+        )
+
+        run = p.add_run("Nơi nhận:")
+
+        apply_font(
+            run,
+            bold=True,
+            italic=True,
+        )
+
+        for item in recipients:
+
+            p = self.doc.add_paragraph()
+
+            apply_paragraph_style(
+                p,
+                align=ALIGN_LEFT,
+                indent=False,
+            )
+
+            run = p.add_run(f"- {item}")
+
+            apply_font(run)
+                # =====================================================
+    # Footer / Ghi chú cuối văn bản
+    # =====================================================
+
+    def add_footer(self, text=""):
+
+        if not text:
+            return
+
+        self.blank()
+
+        p = self.doc.add_paragraph()
+
+        apply_paragraph_style(
+            p,
+            align=ALIGN_CENTER,
+            indent=False,
+        )
+
+        run = p.add_run(text)
+
+        apply_font(
+            run,
+            italic=True,
+            size=11,
+        )
     def create_header(
         self,
         agency,
@@ -91,109 +267,121 @@ class BaseDocument:
     ):
 
         table = self.doc.add_table(rows=1, cols=2)
-
         table.autofit = False
 
         table.columns[0].width = Cm(8)
-
         table.columns[1].width = Cm(8)
 
         left = table.cell(0, 0)
-
         right = table.cell(0, 1)
 
-        # ----------------------
+        # ==========================
         # CỘT TRÁI
-        # ----------------------
+        # ==========================
 
         p = left.paragraphs[0]
 
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        apply_paragraph_style(
+            p,
+            align=ALIGN_CENTER,
+            indent=False,
+        )
 
         run = p.add_run(agency + "\n")
 
-        run.bold = True
-
-        run.font.size = Pt(13)
-
-        run.font.name = "Times New Roman"
+        apply_font(
+            run,
+            bold=True,
+        )
 
         run = p.add_run(unit)
 
-        run.bold = True
-
-        run.font.size = Pt(13)
-
-        run.font.name = "Times New Roman"
+        apply_font(
+            run,
+            bold=True,
+        )
 
         p = left.add_paragraph()
 
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        apply_paragraph_style(
+            p,
+            align=ALIGN_CENTER,
+            indent=False,
+        )
 
         p.add_run("_______________")
 
         p = left.add_paragraph()
 
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        apply_paragraph_style(
+            p,
+            align=ALIGN_CENTER,
+            indent=False,
+        )
 
         run = p.add_run(f"Số: {number}")
 
-        run.font.size = Pt(13)
+        apply_font(run)
 
-        run.font.name = "Times New Roman"
-
-        # ----------------------
+        # ==========================
         # CỘT PHẢI
-        # ----------------------
+        # ==========================
 
         p = right.paragraphs[0]
 
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        apply_paragraph_style(
+            p,
+            align=ALIGN_CENTER,
+            indent=False,
+        )
 
         run = p.add_run(
             "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\n"
         )
 
-        run.bold = True
-
-        run.font.name = "Times New Roman"
-
-        run.font.size = Pt(13)
+        apply_font(
+            run,
+            bold=True,
+        )
 
         run = p.add_run(
             "Độc lập - Tự do - Hạnh phúc"
         )
 
-        run.bold = True
-
-        run.font.name = "Times New Roman"
-
-        run.font.size = Pt(13)
+        apply_font(
+            run,
+            bold=True,
+        )
 
         p = right.add_paragraph()
 
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        apply_paragraph_style(
+            p,
+            align=ALIGN_CENTER,
+            indent=False,
+        )
 
         p.add_run("_______________")
 
         p = right.add_paragraph()
 
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-        run = p.add_run(
-            f"{location}, {date_text}"
+        apply_paragraph_style(
+            p,
+            align=ALIGN_CENTER,
+            indent=False,
         )
 
-        run.italic = True
+        run = p.add_run(f"{location}, {date_text}")
 
-        run.font.name = "Times New Roman"
+        apply_font(
+            run,
+            italic=True,
+        )
 
-        run.font.size = Pt(13)
-
-        self.doc.add_paragraph()
+        self.blank()
 
     # =====================================================
-    # Tiêu đề văn bản
+    # Tiêu đề
     # =====================================================
 
     def create_title(
@@ -202,52 +390,27 @@ class BaseDocument:
         subtitle=""
     ):
 
-        p = self.doc.add_paragraph()
+        self.add_heading(
+            title.upper(),
+            level=1,
+        )
 
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        if subtitle:
 
-        run = p.add_run(title.upper())
+            self.add_heading(
+                subtitle,
+                level=3,
+            )
 
-        run.bold = True
-
-        run.font.name = "Times New Roman"
-
-        run.font.size = Pt(15)
-
-        if subtitle != "":
-
-            p = self.doc.add_paragraph()
-
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-            run = p.add_run(subtitle)
-
-            run.bold = True
-
-            run.font.name = "Times New Roman"
-
-            run.font.size = Pt(13)
-
-        self.doc.add_paragraph()
+        self.blank()
 
     # =====================================================
     # Nội dung
     # =====================================================
 
-    def create_content(
-        self,
-        text
-    ):
+    def create_content(self, text):
 
-        p = self.doc.add_paragraph()
-
-        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-
-        run = p.add_run(text)
-
-        run.font.name = "Times New Roman"
-
-        run.font.size = Pt(13)
+        self.add_text(text)
 
     # =====================================================
     # Người ký
@@ -261,49 +424,49 @@ class BaseDocument:
 
         p = self.doc.add_paragraph()
 
-        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        apply_paragraph_style(
+            p,
+            align=ALIGN_RIGHT,
+            indent=False,
+        )
 
         run = p.add_run(position)
 
-        run.bold = True
+        apply_font(
+            run,
+            bold=True,
+        )
 
-        run.font.name = "Times New Roman"
-
-        run.font.size = Pt(13)
-
-        self.doc.add_paragraph()
-
-        self.doc.add_paragraph()
-
-        self.doc.add_paragraph()
+        self.blank(3)
 
         p = self.doc.add_paragraph()
 
-        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        apply_paragraph_style(
+            p,
+            align=ALIGN_RIGHT,
+            indent=False,
+        )
 
         run = p.add_run(signer)
 
-        run.bold = True
-
-        run.font.name = "Times New Roman"
-
-        run.font.size = Pt(13)
+        apply_font(
+            run,
+            bold=True,
+        )
 
     # =====================================================
     # Xuống dòng
     # =====================================================
 
-    def blank(self):
+    def blank(self, lines=1):
 
-        self.doc.add_paragraph()
+        for _ in range(lines):
+            self.doc.add_paragraph()
 
     # =====================================================
     # Lưu file
     # =====================================================
 
-    def save(
-        self,
-        path
-    ):
+    def save(self, path):
 
         self.doc.save(path)
