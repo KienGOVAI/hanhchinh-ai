@@ -1,52 +1,55 @@
-from pathlib import Path
-from datetime import datetime
-
-from app.templates.cong_van import CongVanTemplate
 from app.services.ai_service import AIService
-
-OUTPUT_DIR = Path("output")
+from app.services.document_builder import DocumentBuilder
 
 
 def generate_document(data):
+    """
+    Sinh văn bản hoàn chỉnh.
 
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    Quy trình:
+        1. Gọi AI sinh nội dung.
+        2. Gán nội dung AI vào data.
+        3. DocumentBuilder chọn template phù hợp.
+        4. Sinh file Word.
+        5. Trả thông tin tải xuống.
+    """
 
-    # ==========================
-    # Gọi AI
-    # ==========================
+    # =====================================================
+    # AI
+    # =====================================================
 
     ai = AIService()
 
     ai_content = ai.generate_document(
         document_type=data.type,
         title=data.title,
-        content=data.content
+        content=data.content,
     )
 
-    # ==========================
-    # Gán nội dung AI sinh
-    # ==========================
+    # =====================================================
+    # GÁN NỘI DUNG AI
+    # =====================================================
 
     data.content = ai_content
 
-    # ==========================
-    # Sinh Word
-    # ==========================
+    # =====================================================
+    # BUILD DOCUMENT
+    # =====================================================
 
-    template = CongVanTemplate()
+    builder = DocumentBuilder()
 
-    doc = template.build(data)
+    result = builder.build(
+        data,
+    )
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    file_name = f"CongVan_{timestamp}.docx"
-
-    file_path = OUTPUT_DIR / file_name
-
-    doc.save(file_path)
+    # =====================================================
+    # RESPONSE
+    # =====================================================
 
     return {
-        "success": True,
-        "file_name": file_name,
-        "download_url": f"/document/download/{file_name}"
+        "success": result["success"],
+        "file_name": result["file_name"],
+        "download_url": (
+            f"/document/download/{result['file_name']}"
+        ),
     }
