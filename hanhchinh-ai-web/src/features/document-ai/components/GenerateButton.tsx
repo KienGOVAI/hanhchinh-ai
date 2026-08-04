@@ -16,6 +16,7 @@ export default function GenerateButton({
   return (
     <div className="flex justify-end">
       <Button
+        type="button"
         size="lg"
         onClick={onClick}
         disabled={loading || disabled}
@@ -24,7 +25,7 @@ export default function GenerateButton({
         {loading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            AI đang soạn...
+            AI đang soạn văn bản...
           </>
         ) : (
           <>

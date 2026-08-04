@@ -6,41 +6,43 @@ import type {
 } from "../types/document.types";
 
 class DocumentAIService {
-  /**
-   * Gửi yêu cầu tạo văn bản bằng AI
-   */
+
   async generate(
     request: GenerateDocumentRequest
   ): Promise<GenerateDocumentResponse> {
+
     const { data } =
       await api.post<GenerateDocumentResponse>(
-        "/api/documents/generate",
+        "/document/generate",
         request
       );
 
     return data;
   }
 
-  /**
-   * Kiểm tra trạng thái AI Provider
-   * (Chuẩn bị cho Sprint 11)
-   */
+  async download(
+    fileName: string
+  ): Promise<void> {
+
+    window.open(
+      `${import.meta.env.VITE_API_URL}/document/download/${fileName}`,
+      "_blank"
+    );
+  }
+
   async health() {
-    const { data } = await api.get("/api/health");
+
+    const { data } =
+      await api.get("/document/health");
 
     return data;
   }
 
-  /**
-   * Lấy danh sách AI Provider
-   * (Chuẩn bị cho Sprint 11)
-   */
   async providers() {
-    const { data } = await api.get(
-      "/api/providers"
-    );
 
-    return data;
+    throw new Error(
+      "Provider API chưa được triển khai."
+    );
   }
 }
 

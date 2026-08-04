@@ -1,10 +1,9 @@
 """
 Prompt Validator
 ----------------
+
 Kiểm tra Prompt trước khi gửi tới AI.
 """
-
-from typing import Tuple
 
 
 class PromptValidator:
@@ -12,15 +11,20 @@ class PromptValidator:
     MAX_PROMPT_LENGTH = 50000
 
     @classmethod
-    def validate(cls, prompt: str) -> Tuple[bool, str]:
+    def validate(
+        cls,
+        prompt: str,
+    ) -> tuple[bool, str]:
         """
+        Kiểm tra Prompt hợp lệ.
+
         Returns
         -------
         (True, "OK")
-            Prompt hợp lệ
+            Prompt hợp lệ.
 
         (False, "Lý do")
-            Prompt không hợp lệ
+            Prompt không hợp lệ.
         """
 
         if not prompt:
@@ -28,7 +32,7 @@ class PromptValidator:
 
         prompt = prompt.strip()
 
-        if len(prompt) == 0:
+        if not prompt:
             return False, "Prompt rỗng."
 
         if len(prompt) > cls.MAX_PROMPT_LENGTH:
@@ -37,16 +41,9 @@ class PromptValidator:
                 f"Prompt vượt quá {cls.MAX_PROMPT_LENGTH:,} ký tự."
             )
 
-        if "SYSTEM PROMPT" not in prompt:
-            return (
-                False,
-                "Thiếu System Prompt."
-            )
-
-        if "YÊU CẦU NGƯỜI DÙNG" not in prompt:
-            return (
-                False,
-                "Thiếu User Prompt."
-            )
+        # =====================================================
+        # Không kiểm tra tiêu đề cứng nữa.
+        # Chỉ cần Prompt có nội dung là hợp lệ.
+        # =====================================================
 
         return True, "OK"

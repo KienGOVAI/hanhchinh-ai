@@ -2,66 +2,114 @@
 Template Loader
 ---------------
 
-Chịu trách nhiệm nạp các file Word Template.
+Chịu trách nhiệm nạp Word Template.
 """
 
 from pathlib import Path
+
 from docx import Document
 
-from app.templates.template_factory import TemplateFactory
+from app.templates.template_definition import (
+    TemplateDefinition,
+)
+from app.templates.template_factory import (
+    TemplateFactory,
+)
 
 
 class TemplateLoader:
     """
-    Nạp và quản lý Word Template.
+    Loader quản lý Word Template.
     """
 
-    def __init__(self):
-        self.root = Path("templates")
+    ROOT = Path("templates")
 
-    def get_path(self, template_name: str) -> Path:
+    # =====================================================
+    # PUBLIC
+    # =====================================================
+
+    def load(
+        self,
+        template_name: str,
+    ) -> Document:
         """
-        Trả về đường dẫn tuyệt đối của template.
+        Nạp Template Word.
         """
 
-        template = TemplateFactory.create(template_name)
+        return Document(
+            self.get_path(
+                template_name
+            )
+        )
 
-        path = (
-            self.root
-            / template.template_folder
-            / template.file_name
+    def get_path(
+        self,
+        template_name: str,
+    ) -> Path:
+        """
+        Trả về đường dẫn Template.
+        """
+
+        template = TemplateFactory.create(
+            template_name
+        )
+
+        path = self._build_path(
+            template
         )
 
         if not path.exists():
+
             raise FileNotFoundError(
                 f"Không tìm thấy Template: {path}"
             )
 
         return path
 
-    def load(self, template_name: str) -> Document:
+    def exists(
+        self,
+        template_name: str,
+    ) -> bool:
         """
-        Nạp file Word và trả về đối tượng Document.
-        """
-
-        path = self.get_path(template_name)
-
-        return Document(path)
-
-    def exists(self, template_name: str) -> bool:
-        """
-        Kiểm tra template có tồn tại trên ổ đĩa.
+        Kiểm tra Template tồn tại.
         """
 
         try:
-            path = self.get_path(template_name)
-            return path.exists()
+
+            return self.get_path(
+                template_name
+            ).exists()
+
         except Exception:
+
             return False
 
-    def list_templates(self):
+    def list_templates(
+        self,
+        enabled_only: bool = False,
+    ) -> list[TemplateDefinition]:
         """
-        Trả về toàn bộ template đã đăng ký.
+        Danh sách Template.
         """
 
-        return TemplateFactory.all()
+        return TemplateFactory.all(
+            enabled_only=enabled_only
+        )
+
+    # =====================================================
+    # PRIVATE
+    # =====================================================
+
+    def _build_path(
+        self,
+        template: TemplateDefinition,
+    ) -> Path:
+        """
+        Sinh đường dẫn đầy đủ tới Template.
+        """
+
+        return (
+            self.ROOT
+            / template.template_folder
+            / template.file_name
+        )

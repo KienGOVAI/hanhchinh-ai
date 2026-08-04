@@ -5,21 +5,41 @@ from app.core.config import (
     OPENROUTER_MODEL,
 )
 
+from app.providers.base_provider import BaseProvider
+from app.schemas.document import DocumentResponse
 
-class OpenRouterProvider:
+
+class OpenRouterProvider(BaseProvider):
+    """
+    AI Provider sử dụng OpenRouter.
+    """
 
     BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 
+    @property
+    def provider_name(self) -> str:
+        return "openrouter"
+
     def generate(
         self,
-        prompt: str
-    ) -> str:
+        prompt: str,
+    ) -> DocumentResponse:
+
+        if not OPENROUTER_API_KEY:
+            return DocumentResponse(
+                success=False,
+                provider=self.provider_name,
+                document_type="unknown",
+                file_name="",
+                content="",
+                message="Thiếu OPENROUTER_API_KEY trong file .env",
+            )
 
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
             "HTTP-Referer": "http://localhost",
-            "X-Title": "Hanh Chinh AI"
+            "X-Title": "Hanh Chinh AI",
         }
 
         payload = {
@@ -27,9 +47,9 @@ class OpenRouterProvider:
             "messages": [
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": prompt,
                 }
-            ]
+            ],
         }
 
         try:
@@ -38,20 +58,35 @@ class OpenRouterProvider:
                 self.BASE_URL,
                 headers=headers,
                 json=payload,
-                timeout=120
+                timeout=120,
             )
-
-            print("=" * 80)
-            print(response.status_code)
-            print(response.text)
-            print("=" * 80)
 
             response.raise_for_status()
 
             data = response.json()
 
-            return data["choices"][0]["message"]["content"]
+            content = (
+                data.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "")
+            )
+
+            return DocumentResponse(
+                success=True,
+                provider=self.provider_name,
+                document_type="unknown",
+                file_name="",
+                content=content,
+                message="Sinh văn bản thành công.",
+            )
 
         except Exception as ex:
 
-            return f"Lỗi OpenRouter:\n\n{ex}"
+            return DocumentResponse(
+                success=False,
+                provider=self.provider_name,
+                document_type="unknown",
+                file_name="",
+                content="",
+                message=f"Lỗi OpenRouter: {ex}",
+            )

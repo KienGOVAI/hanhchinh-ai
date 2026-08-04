@@ -17,17 +17,21 @@ export default function DocumentStudioPage() {
   const [provider, setProvider] =
     useState<AIProvider>(DEFAULT_PROVIDER as AIProvider);
 
-  const [documentType, setDocumentType] = useState("");
+  const [documentType, setDocumentType] =
+    useState("");
 
   const [title, setTitle] = useState("");
 
   const [prompt, setPrompt] = useState("");
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
-  const generateMutation = useGenerateDocument();
+  const generateMutation =
+    useGenerateDocument();
 
-  const isLoading = generateMutation.isPending;
+  const isLoading =
+    generateMutation.isPending;
 
   useEffect(() => {
     if (!generateMutation.error) {
@@ -36,7 +40,9 @@ export default function DocumentStudioPage() {
     }
 
     setErrorMessage(
-      getErrorMessage(generateMutation.error)
+      getErrorMessage(
+        generateMutation.error
+      )
     );
   }, [generateMutation.error]);
 
@@ -45,7 +51,7 @@ export default function DocumentStudioPage() {
 
     generateMutation.mutate({
       provider,
-      documentType,
+      type: documentType,
       title,
       prompt,
     });
@@ -65,6 +71,8 @@ export default function DocumentStudioPage() {
         </p>
       </div>
 
+      {/* Form */}
+
       <fieldset
         disabled={isLoading}
         className="space-y-8 disabled:opacity-70"
@@ -72,7 +80,9 @@ export default function DocumentStudioPage() {
         <ProviderSelect
           value={provider}
           onChange={(value) =>
-            setProvider(value as AIProvider)
+            setProvider(
+              value as AIProvider
+            )
           }
         />
 
@@ -104,6 +114,8 @@ export default function DocumentStudioPage() {
         />
       </fieldset>
 
+      {/* Error */}
+
       {errorMessage && (
         <div className="rounded-lg border border-red-300 bg-red-50 p-4">
           <h3 className="font-semibold text-red-700">
@@ -116,12 +128,22 @@ export default function DocumentStudioPage() {
         </div>
       )}
 
+      {/* AI Result */}
+
       <AIResponse
-        content={generateMutation.data?.content ?? ""}
+        loading={isLoading}
+        content={
+          generateMutation.data?.content ??
+          ""
+        }
       />
 
+      {/* Export */}
+
       <ExportActions
-        disabled={!generateMutation.data?.content}
+        disabled={
+          !generateMutation.data?.content
+        }
       />
     </div>
   );

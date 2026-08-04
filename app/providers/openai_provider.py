@@ -1,49 +1,85 @@
-from google import genai
+"""
+OpenAI Provider
+---------------
+
+Provider sử dụng OpenAI API.
+"""
+
+from openai import OpenAI
 
 from app.core.config import (
-    GEMINI_API_KEY,
-    GEMINI_MODEL,
+    OPENAI_API_KEY,
+    OPENAI_MODEL,
 )
 
+from app.providers.base_provider import BaseProvider
 
-class OpenAIProvider:
 
-    def __init__(self):
+class OpenAIProvider(BaseProvider):
+    """
+    AI Provider sử dụng OpenAI.
+    """
 
-        if not GEMINI_API_KEY:
-            raise ValueError(
-                "Thiếu GEMINI_API_KEY trong file .env"
-            )
-
-        self.client = genai.Client(
-            api_key=GEMINI_API_KEY
-        )
+    @property
+    def provider_name(self) -> str:
+        return "openai"
 
     def generate(
         self,
-        prompt: str
+        prompt: str,
     ) -> str:
+        """
+        Sinh nội dung bằng OpenAI.
+
+        Returns
+        -------
+        str
+            Nội dung AI sinh ra.
+        """
+
+        if not OPENAI_API_KEY:
+            raise RuntimeError(
+                "OPENAI_API_KEY chưa được cấu hình."
+            )
 
         try:
 
-            response = self.client.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
+            client = OpenAI(
+                api_key=OPENAI_API_KEY,
             )
 
-            print("=" * 80)
-            print(response)
-            print("=" * 80)
+            response = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                temperature=0.2,
+            )
 
-            if hasattr(response, "text") and response.text:
-                return response.text
+            content = (
+                response.choices[0]
+                .message
+                .content
+            )
 
-            return str(response)
+            if content is None:
+                raise RuntimeError(
+                    "OpenAI không trả về nội dung."
+                )
+
+            content = content.strip()
+
+            if not content:
+                raise RuntimeError(
+                    "OpenAI trả về nội dung rỗng."
+                )
+
+            return content
 
         except Exception as ex:
-
-            import traceback
-
-            traceback.print_exc()
-
-            return f"Lỗi Gemini:\n\n{ex}"
+            raise RuntimeError(
+                f"Lỗi OpenAI: {ex}"
+            ) from ex

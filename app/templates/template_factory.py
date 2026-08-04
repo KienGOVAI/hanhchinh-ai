@@ -2,41 +2,86 @@
 Template Factory
 ----------------
 
-Factory tạo và cung cấp thông tin TemplateDefinition.
+Factory tạo và cung cấp TemplateDefinition.
 """
 
-from app.templates.template_definition import TemplateDefinition
-from app.templates.template_registry import TemplateRegistry
+from app.templates.template_definition import (
+    TemplateDefinition,
+)
+from app.templates.template_registry import (
+    TemplateRegistry,
+)
 
 
 class TemplateFactory:
     """
-    Factory tạo TemplateDefinition từ template_name.
+    Factory làm việc với TemplateDefinition.
     """
 
-    @staticmethod
-    def create(template_name: str) -> TemplateDefinition:
-        """
-        Trả về TemplateDefinition tương ứng.
-
-        Args:
-            template_name: Tên template.
-
-        Returns:
-            TemplateDefinition
-        """
-        return TemplateRegistry.get(template_name)
+    # =====================================================
+    # CREATE
+    # =====================================================
 
     @staticmethod
-    def exists(template_name: str) -> bool:
+    def create(
+        template_name: str,
+    ) -> TemplateDefinition:
         """
-        Kiểm tra template có tồn tại hay không.
+        Lấy TemplateDefinition theo tên.
         """
-        return TemplateRegistry.exists(template_name)
+
+        template = TemplateRegistry.get(
+            template_name
+        )
+
+        if not template.enabled:
+            raise ValueError(
+                f"Template '{template_name}' đang bị vô hiệu hóa."
+            )
+
+        return template
+
+    # =====================================================
+    # EXISTS
+    # =====================================================
 
     @staticmethod
-    def all() -> list[TemplateDefinition]:
+    def exists(
+        template_name: str,
+    ) -> bool:
         """
-        Trả về toàn bộ template đã đăng ký.
+        Kiểm tra Template tồn tại.
         """
+
+        return TemplateRegistry.exists(
+            template_name
+        )
+
+    # =====================================================
+    # LIST
+    # =====================================================
+
+    @staticmethod
+    def all(
+        enabled_only: bool = False,
+    ) -> list[TemplateDefinition]:
+        """
+        Trả về danh sách Template.
+        """
+
+        if enabled_only:
+            return TemplateRegistry.enabled()
+
         return TemplateRegistry.list()
+
+    # =====================================================
+    # COUNT
+    # =====================================================
+
+    @staticmethod
+    def count() -> int:
+        """
+        Tổng số Template.
+        """
+
+        return TemplateRegistry.count()

@@ -1,4 +1,6 @@
-import axios, {
+import axios from "axios";
+
+import type {
   AxiosError,
   AxiosInstance,
   AxiosResponse,
@@ -12,27 +14,13 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-/**
- * Request Interceptor
- * Tự động thêm JWT sau này.
- */
 api.interceptors.request.use(
   (config) => {
-    // TODO Sprint Authentication
-    // const token = authStore.getState().accessToken;
-    //
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-/**
- * Response Interceptor
- */
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
 

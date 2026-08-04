@@ -1,13 +1,20 @@
 import { Bot } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface AIResponseProps {
   content: string;
+  loading?: boolean;
 }
 
 export default function AIResponse({
   content,
+  loading = false,
 }: AIResponseProps) {
   return (
     <Card className="min-h-[350px]">
@@ -19,7 +26,25 @@ export default function AIResponse({
       </CardHeader>
 
       <CardContent>
-        {content ? (
+        {loading ? (
+          <div className="space-y-4 animate-pulse">
+
+            <div className="h-5 w-40 rounded bg-muted" />
+
+            <div className="h-4 w-full rounded bg-muted" />
+
+            <div className="h-4 w-full rounded bg-muted" />
+
+            <div className="h-4 w-5/6 rounded bg-muted" />
+
+            <div className="h-4 w-full rounded bg-muted" />
+
+            <div className="h-4 w-3/4 rounded bg-muted" />
+
+            <div className="h-4 w-2/3 rounded bg-muted" />
+
+          </div>
+        ) : content ? (
           <div className="whitespace-pre-wrap text-sm leading-7">
             {content}
           </div>
@@ -33,8 +58,9 @@ export default function AIResponse({
               </h3>
 
               <p className="max-w-md text-sm text-muted-foreground">
-                Chọn loại văn bản, nhập yêu cầu rồi nhấn
-                <strong> "Tạo bằng AI"</strong>.
+                Chọn loại văn bản, nhập yêu cầu rồi nhấn{" "}
+                <strong>"Tạo bằng AI"</strong>.
+                <br />
                 Kết quả sẽ hiển thị tại đây.
               </p>
             </div>

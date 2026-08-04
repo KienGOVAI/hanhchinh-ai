@@ -2,17 +2,14 @@
 AI Service
 ----------
 
-Chịu trách nhiệm:
-
-- Lấy DocumentDefinition
-- Xây dựng Context
-- Gọi PromptBuilder để sinh Prompt
-- Kiểm tra Prompt
-- Gửi Prompt tới AI Provider
+Điều phối toàn bộ quá trình sinh Prompt và gọi AI.
 """
 
 from app.builders.context_builder import ContextBuilder
 from app.builders.prompt_builder import PromptBuilder
+from app.conversation.conversation_history import (
+    ConversationHistory,
+)
 from app.documents.document_factory import DocumentFactory
 from app.providers.provider_factory import ProviderFactory
 from app.services.prompt_validator import PromptValidator
@@ -20,72 +17,103 @@ from app.services.prompt_validator import PromptValidator
 
 class AIService:
     """
-    AI Service
+    AI Service.
     """
 
     def __init__(self):
+
         self.context_builder = ContextBuilder()
+
         self.prompt_builder = PromptBuilder()
+
         self.provider = ProviderFactory.create()
+
+    # =====================================================
+    # GENERATE DOCUMENT
+    # =====================================================
 
     def generate_document(
         self,
+        *,
         document_type: str,
         title: str,
         content: str,
-        extra_context: str = ""
-    ):
+        extra_context: str = "",
+        history: ConversationHistory | None = None,
+    ) -> str:
         """
-        Sinh văn bản bằng AI.
-
-        Parameters
-        ----------
-        document_type : str
-            Loại văn bản (cong_van, ke_hoach, thong_bao, ...)
-        title : str
-            Tiêu đề văn bản
-        content : str
-            Nội dung yêu cầu
-        extra_context : str
-            Ngữ cảnh bổ sung
+        Sinh nội dung văn bản bằng AI.
         """
 
         # =====================================
-        # Lấy Document Definition
+        # DOCUMENT
         # =====================================
 
-        document = DocumentFactory.create(document_type)
+        document = DocumentFactory.create(
+            document_type
+        )
 
         # =====================================
-        # Build Context
+        # CONTEXT
         # =====================================
 
         context = self.context_builder.build(
             document_type=document.document_type,
-            extra_context=extra_context
+            extra_context=extra_context,
         )
 
         # =====================================
-        # Build Prompt
+        # PROMPT
         # =====================================
 
         prompt = self.prompt_builder.build(
             document=document,
             user_input=f"{title}\n\n{content}",
-            context=context
+            context=context,
+            history=history,
         )
 
         # =====================================
-        # Validate Prompt
+        # VALIDATE
         # =====================================
 
-        valid, message = PromptValidator.validate(prompt)
+        valid, message = PromptValidator.validate(
+            prompt
+        )
 
         if not valid:
             raise ValueError(message)
 
         # =====================================
-        # Generate Document
+        # PROVIDER HEALTH CHECK
         # =====================================
 
-        return self.provider.generate(prompt)
+        if not self.provider.health_check():
+            raise RuntimeError(
+                f"Provider '{self.provider.provider_name}' không sẵn sàng."
+            )
+
+        # =====================================
+        # AI GENERATE
+        # =====================================
+
+        answer = self.provider.generate(prompt)
+
+        # =====================================
+        # VALIDATE RESULT
+        # =====================================
+
+        if not isinstance(answer, str):
+            raise TypeError(
+                f"{self.provider.provider_name} phải trả về str, "
+                f"nhận được {type(answer).__name__}."
+            )
+
+        answer = answer.strip()
+
+        if not answer:
+            raise RuntimeError(
+                f"{self.provider.provider_name} trả về nội dung rỗng."
+            )
+
+        return answer

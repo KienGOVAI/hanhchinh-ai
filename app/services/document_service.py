@@ -5,85 +5,127 @@ Document Service
 Điều phối toàn bộ quy trình sinh văn bản.
 """
 
-from app.documents.document_factory import DocumentFactory
-from app.services.ai_service import AIService
-from app.services.document_builder import DocumentBuilder
-from app.templates.template_factory import TemplateFactory
-from app.templates.template_loader import TemplateLoader
+from app.conversation.conversation_service import (
+    ConversationService,
+)
+from app.documents.document_factory import (
+    DocumentFactory,
+)
+from app.schemas.document import (
+    DocumentRequest,
+    DocumentResponse,
+)
+from app.services.ai_service import (
+    AIService,
+)
+from app.services.document_builder import (
+    DocumentBuilder,
+)
 
 
-def generate_document(data):
+def generate_document(
+    data: DocumentRequest,
+) -> DocumentResponse:
     """
     Sinh văn bản hoàn chỉnh.
-
-    Quy trình:
-
-        1. Xác định loại văn bản.
-        2. Xác định template.
-        3. Kiểm tra template tồn tại.
-        4. AI sinh nội dung.
-        5. Build Word.
-        6. Trả kết quả.
     """
 
-    # =====================================================
-    # DOCUMENT
-    # =====================================================
+    try:
 
-    document = DocumentFactory.create(data.type)
+        # ==================================================
+        # DOCUMENT
+        # ==================================================
 
-    # =====================================================
-    # TEMPLATE
-    # =====================================================
-
-    template = TemplateFactory.create(
-        document.template_name
-    )
-
-    loader = TemplateLoader()
-
-    if not loader.exists(template.template_name):
-        raise FileNotFoundError(
-            f"Không tìm thấy template '{template.file_name}'."
+        document = DocumentFactory.create(
+            data.type
         )
 
-    # =====================================================
-    # AI
-    # =====================================================
+        # ==================================================
+        # CONVERSATION
+        # ==================================================
 
-    ai = AIService()
+        conversation_service = ConversationService()
 
-    ai_content = ai.generate_document(
-        document_type=document.document_type,
-        title=data.title,
-        content=data.content,
-    )
+        conversation = conversation_service.create(
+            title=data.title,
+        )
 
-    # =====================================================
-    # GÁN NỘI DUNG AI
-    # =====================================================
+        conversation_service.add_user_message(
+            conversation.conversation_id,
+            data.prompt,
+        )
 
-    data.content = ai_content
+        history = conversation_service.history(
+            conversation.conversation_id
+        )
 
-    # =====================================================
-    # BUILD DOCUMENT
-    # =====================================================
+        # ==================================================
+        # AI SERVICE
+        # ==================================================
 
-    builder = DocumentBuilder()
+        ai_service = AIService()
 
-    result = builder.build(data)
+        ai_content = ai_service.generate_document(
+            document_type=document.document_type,
+            title=data.title,
+            content=data.prompt,
+            history=history,
+        )
 
-    # =====================================================
-    # RESPONSE
-    # =====================================================
+        if not isinstance(ai_content, str):
+            raise TypeError(
+                f"AIService phải trả về str, nhận được "
+                f"{type(ai_content).__name__}"
+            )
 
-    return {
-        "success": result["success"],
-        "document_type": document.document_type,
-        "document_name": document.display_name,
-        "template_name": template.template_name,
-        "file_name": result["file_name"],
-        "download_url": (
-            f"/document/download/{result['file_name']}"
-        ),
-    }
+        ai_content = ai_content.strip()
+
+        if not ai_content:
+            raise RuntimeError(
+                "AI không sinh được nội dung."
+            )
+
+        # ==================================================
+        # SAVE CONVERSATION
+        # ==================================================
+
+        conversation_service.add_assistant_message(
+            conversation.conversation_id,
+            ai_content,
+        )
+
+        # ==================================================
+        # BUILD WORD
+        # ==================================================
+
+        data.prompt = ai_content
+        data.content = ai_content
+        builder = DocumentBuilder()
+
+        result = builder.build(
+            data
+        )
+
+        # ==================================================
+        # RESPONSE
+        # ==================================================
+
+        return DocumentResponse(
+            success=result["success"],
+            provider=data.provider,
+            document_type=document.document_type,
+            file_name=result["file_name"],
+            content=ai_content,
+            message="Sinh văn bản thành công.",
+        )
+
+    except Exception as ex:
+
+        return DocumentResponse(
+            success=False,
+            provider=data.provider,
+            document_type=data.type,
+            file_name="",
+            content="",
+            message=str(ex),
+        )

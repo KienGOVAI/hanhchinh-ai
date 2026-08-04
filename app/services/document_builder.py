@@ -1,55 +1,89 @@
-from pathlib import Path
-from datetime import datetime
+"""
+Document Builder
+----------------
 
+Sinh và lưu văn bản Word.
+"""
+
+from datetime import datetime
+from pathlib import Path
+from uuid import uuid4
+
+from app.schemas.document import DocumentRequest
 from app.templates.factory import TemplateFactory
 
 
 class DocumentBuilder:
+    """
+    Builder sinh văn bản Word.
+    """
 
-    def __init__(self, output_dir="output"):
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True)
+    OUTPUT_DIR = Path("output")
 
-    def build(self, data):
+    def __init__(self):
 
-        # =====================================
-        # Chọn Template
-        # =====================================
+        self.OUTPUT_DIR.mkdir(
+            exist_ok=True
+        )
+
+    # =====================================================
+    # PUBLIC
+    # =====================================================
+
+    def build(
+        self,
+        data: DocumentRequest,
+    ) -> dict:
+        """
+        Sinh văn bản.
+        """
 
         template = TemplateFactory.create(
-            data.type,
+            data.type
         )
 
-        # =====================================
-        # Sinh Word
-        # =====================================
+        if template is None:
 
-        doc = template.build(
-            data,
+            raise ValueError(
+                f"Không tìm thấy Template '{data.type}'."
+            )
+
+        document = template.build(
+            data
         )
 
-        # =====================================
-        # Tên file
-        # =====================================
+        filepath = self._build_output_path(
+            data.type
+        )
+
+        document.save(filepath)
+
+        return {
+            "success": True,
+            "file_name": filepath.name,
+            "file_path": str(filepath),
+        }
+
+    # =====================================================
+    # PRIVATE
+    # =====================================================
+
+    def _build_output_path(
+        self,
+        document_type: str,
+    ) -> Path:
+        """
+        Sinh tên file đầu ra.
+        """
 
         timestamp = datetime.now().strftime(
             "%Y%m%d_%H%M%S"
         )
 
+        unique = uuid4().hex[:8]
+
         filename = (
-            f"{data.type}_{timestamp}.docx"
+            f"{document_type}_{timestamp}_{unique}.docx"
         )
 
-        filepath = self.output_dir / filename
-
-        # =====================================
-        # Lưu file
-        # =====================================
-
-        doc.save(filepath)
-
-        return {
-            "success": True,
-            "file_name": filename,
-            "file_path": str(filepath),
-        }
+        return self.OUTPUT_DIR / filename
