@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 
 import {
+  BookOpen,
   Bot,
   FileText,
   FolderOpen,
@@ -20,16 +21,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 
-interface MenuItem {
-  title: string;
-  url: string;
-  icon: React.ElementType;
-}
-
-const menus: MenuItem[] = [
+const menus = [
   {
     title: "Dashboard",
     url: "/",
@@ -39,6 +33,11 @@ const menus: MenuItem[] = [
     title: "Soạn văn bản AI",
     url: "/documents",
     icon: FileText,
+  },
+  {
+    title: "Kho tri thức",
+    url: "/knowledge",
+    icon: BookOpen,
   },
   {
     title: "Trợ lý AI",
@@ -59,91 +58,71 @@ const menus: MenuItem[] = [
 
 export default function AppSidebar() {
   return (
-    <Sidebar
-      variant="sidebar"
-      collapsible="icon"
-    >
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b">
-        <div className="flex items-center gap-3 p-2">
+        <div className="flex items-center gap-3 px-2 py-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Sparkles className="h-5 w-5" />
           </div>
 
-          <div className="overflow-hidden">
-            <p className="truncate font-bold">
+          <div className="flex flex-col">
+            <span className="font-bold">
               Hành Chính AI
-            </p>
+            </span>
 
-            <p className="truncate text-xs text-muted-foreground">
-              Văn phòng UBND
-            </p>
+            <span className="text-xs text-muted-foreground">
+              Phiên bản 1.0
+            </span>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-
         <SidebarGroup>
-
           <SidebarGroupLabel>
             ĐIỀU HƯỚNG
           </SidebarGroupLabel>
 
           <SidebarGroupContent>
-
             <SidebarMenu>
-
-              {menus.map((item) => (
-
-                <SidebarMenuItem key={item.title}>
-
+              {menus.map((menu) => (
+                <SidebarMenuItem
+                  key={menu.title}
+                >
                   <SidebarMenuButton
-                    tooltip={item.title}
+                    tooltip={menu.title}
                     render={
                       <NavLink
-                        to={item.url}
+                        to={menu.url}
+                        className={({ isActive }) =>
+                          isActive
+                            ? "font-semibold"
+                            : ""
+                        }
                       />
                     }
                   >
-
-                    <item.icon />
-
-                    <span>
-                      {item.title}
-                    </span>
-
+                    <menu.icon />
+                    <span>{menu.title}</span>
                   </SidebarMenuButton>
-
                 </SidebarMenuItem>
-
               ))}
-
             </SidebarMenu>
-
           </SidebarGroupContent>
-
         </SidebarGroup>
-
       </SidebarContent>
 
       <SidebarFooter className="border-t">
+        <div className="px-3 py-2">
+          <p className="text-xs text-muted-foreground">
+            © 2026
+          </p>
 
-        <div className="px-2 py-3">
-
-          <div className="text-sm font-semibold">
+          <p className="text-sm font-medium">
             Hành Chính AI
-          </div>
-
-          <div className="text-xs text-muted-foreground">
-            Phiên bản 1.0.0
-          </div>
-
+          </p>
         </div>
-
       </SidebarFooter>
-
-      <SidebarRail />
-
     </Sidebar>
   );
 }

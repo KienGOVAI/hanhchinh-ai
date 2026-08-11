@@ -6,8 +6,12 @@ import type {
   AxiosResponse,
 } from "axios";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://127.0.0.1:8000";
+
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_URL,
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
@@ -18,11 +22,15 @@ api.interceptors.request.use(
   (config) => {
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response: AxiosResponse) => {
+    return response;
+  },
 
   (error: AxiosError) => {
     if (error.response) {
@@ -31,9 +39,15 @@ api.interceptors.response.use(
         data: error.response.data,
       });
     } else if (error.request) {
-      console.error("Server không phản hồi.");
+      console.error(
+        "API Network Error:",
+        error.message
+      );
     } else {
-      console.error(error.message);
+      console.error(
+        "API Request Error:",
+        error.message
+      );
     }
 
     return Promise.reject(error);

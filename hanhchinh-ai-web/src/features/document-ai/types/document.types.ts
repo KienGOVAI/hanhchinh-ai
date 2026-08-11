@@ -1,59 +1,138 @@
+/**
+ * Document AI Types
+ * -----------------
+ *
+ * Type definitions cho Document AI.
+ */
+
+import type { LucideIcon } from "lucide-react";
+
+// ============================================================
+// AI PROVIDER
+// ============================================================
+
 export type AIProvider =
   | "ollama"
   | "gemini"
   | "openai";
 
-/**
- * Request gửi tới Backend
- */
+// ============================================================
+// DOCUMENT TYPE
+// ============================================================
+
+export interface DocumentType {
+  /**
+   * Mã loại văn bản.
+   */
+  id: string;
+
+  /**
+   * Tên hiển thị.
+   */
+  name: string;
+
+  /**
+   * Mô tả loại văn bản.
+   */
+  description: string;
+
+  /**
+   * Icon hiển thị trên giao diện.
+   */
+  icon: LucideIcon;
+}
+
+// ============================================================
+// GENERATE REQUEST
+// ============================================================
+
 export interface GenerateDocumentRequest {
+  /**
+   * AI Provider.
+   */
   provider: AIProvider;
 
   /**
-   * Backend FastAPI sử dụng field "type"
+   * Loại văn bản.
+   *
+   * Backend DocumentRequest sử dụng field "type".
    */
   type: string;
 
+  /**
+   * Tiêu đề văn bản.
+   */
   title: string;
 
+  /**
+   * Yêu cầu gửi tới AI.
+   */
   prompt: string;
 }
 
-/**
- * Response trả về từ Backend
- */
+// ============================================================
+// GENERATE RESPONSE
+// ============================================================
+
 export interface GenerateDocumentResponse {
+  /**
+   * Trạng thái xử lý.
+   */
   success: boolean;
 
+  /**
+   * Provider đã sử dụng.
+   */
   provider: AIProvider;
 
   /**
-   * Loại văn bản
+   * Loại văn bản.
    */
-  document_type: string;
+  document_type?: string;
 
   /**
-   * Tên file Word đã sinh
+   * Tên file Word sinh ra.
    */
-  file_name: string;
+  file_name?: string;
 
   /**
-   * Nội dung AI sinh
+   * Nội dung văn bản AI sinh ra.
    */
   content: string;
 
   /**
-   * Thông báo từ Backend
+   * Thông báo từ backend.
    */
-  message: string;
+  message?: string;
+
+  /**
+   * Thời gian xử lý.
+   */
+  processingTime?: number;
+
+  /**
+   * Số token sử dụng.
+   */
+  tokens?: number;
 }
 
-/**
- * Request xuất file
- * (Chuẩn bị cho Sprint 12)
- */
-export interface ExportDocumentRequest {
-  fileName: string;
+// ============================================================
+// EXPORT REQUEST
+// ============================================================
 
+export interface ExportDocumentRequest {
+  /**
+   * Nội dung cần xuất.
+   */
+  content: string;
+
+  /**
+   * Tên file.
+   */
+  filename: string;
+
+  /**
+   * Định dạng xuất.
+   */
   format: "docx" | "pdf";
 }
