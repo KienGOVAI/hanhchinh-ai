@@ -1,0 +1,7 @@
+ app/api/routes/assistant.py              | 327 [32m++++++++++++[m[31m--[m
+ app/api/schemas/assistant.py             |  75 [32m+[m[31m---[m
+ app/conversation/conversation.py         |  66 [32m++[m[31m-[m
+ app/conversation/conversation_history.py |  44 [32m+[m[31m-[m
+ app/conversation/conversation_message.py |  70 [32m+[m[31m--[m
+ test/test_conversation.py                | 743 [32m+++++++++++++++++++++++++++++[m[31m--[m
+ 6 files changed, 1101 insertions(+), 224 deletions(-)

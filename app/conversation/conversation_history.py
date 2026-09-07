@@ -1,14 +1,15 @@
 """
-Conversation History
---------------------
+Conversation History.
 
-Quản lý lịch sử hội thoại.
+Quản lý lịch sử của một Conversation.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from app.conversation.conversation import Conversation
-from app.conversation.conversation_message import ConversationMessage
+from app.conversation.conversation_message import (
+    ConversationMessage,
+)
 
 
 @dataclass(slots=True)
@@ -21,6 +22,12 @@ class ConversationHistory:
 
     max_messages: int = 20
 
+    def __post_init__(self) -> None:
+        if self.max_messages <= 0:
+            raise ValueError(
+                "max_messages phải lớn hơn 0."
+            )
+
     # =====================================================
     # PUBLIC
     # =====================================================
@@ -29,9 +36,6 @@ class ConversationHistory:
         self,
         message: ConversationMessage,
     ) -> None:
-        """
-        Thêm một message.
-        """
 
         self.conversation.add_message(message)
 
@@ -40,9 +44,6 @@ class ConversationHistory:
     def messages(
         self,
     ) -> list[ConversationMessage]:
-        """
-        Trả về toàn bộ lịch sử.
-        """
 
         return self.conversation.messages
 
@@ -50,9 +51,6 @@ class ConversationHistory:
         self,
         limit: int = 10,
     ) -> list[ConversationMessage]:
-        """
-        Lấy N message gần nhất.
-        """
 
         if limit <= 0:
             return []
@@ -60,30 +58,15 @@ class ConversationHistory:
         return self.conversation.messages[-limit:]
 
     def clear(self) -> None:
-        """
-        Xóa toàn bộ lịch sử.
-        """
-
         self.conversation.clear()
 
     def count(self) -> int:
-        """
-        Tổng số message.
-        """
-
         return self.conversation.message_count()
 
     def is_empty(self) -> bool:
-        """
-        Kiểm tra lịch sử rỗng.
-        """
-
         return self.conversation.is_empty()
 
     def to_prompt(self) -> str:
-        """
-        Chuyển lịch sử thành Prompt.
-        """
 
         if self.is_empty():
             return ""
@@ -105,9 +88,6 @@ class ConversationHistory:
     # =====================================================
 
     def _trim(self) -> None:
-        """
-        Giới hạn số lượng message.
-        """
 
         messages = self.conversation.messages
 

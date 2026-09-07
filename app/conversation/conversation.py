@@ -1,6 +1,5 @@
 """
-Conversation Model
-------------------
+Conversation Domain Model.
 
 Định nghĩa một phiên hội thoại với AI.
 """
@@ -58,6 +57,26 @@ class Conversation:
     archived: bool = False
 
     # =====================================================
+    # Validation
+    # =====================================================
+
+    def __post_init__(self) -> None:
+        if not self.conversation_id.strip():
+            raise ValueError(
+                "conversation_id không được rỗng."
+            )
+
+        if not self.user_id.strip():
+            raise ValueError(
+                "user_id không được rỗng."
+            )
+
+        if not self.title.strip():
+            raise ValueError(
+                "title không được rỗng."
+            )
+
+    # =====================================================
     # Public API
     # =====================================================
 
@@ -65,43 +84,42 @@ class Conversation:
         self,
         message: ConversationMessage,
     ) -> None:
-        """
-        Thêm một message vào cuộc hội thoại.
-        """
+        if not isinstance(
+            message,
+            ConversationMessage,
+        ):
+            raise TypeError(
+                "message phải là ConversationMessage."
+            )
 
         self.messages.append(message)
-
         self.updated_at = datetime.now()
 
     def clear(self) -> None:
-        """
-        Xóa toàn bộ lịch sử hội thoại.
-        """
-
         self.messages.clear()
-
         self.updated_at = datetime.now()
 
     def message_count(self) -> int:
-        """
-        Tổng số message.
-        """
-
         return len(self.messages)
 
     def is_empty(self) -> bool:
-        """
-        Kiểm tra hội thoại rỗng.
-        """
-
         return len(self.messages) == 0
 
-    def last_message(self) -> ConversationMessage | None:
-        """
-        Lấy message mới nhất.
-        """
+    def last_message(
+        self,
+    ) -> ConversationMessage | None:
 
         if not self.messages:
             return None
 
         return self.messages[-1]
+
+    def archive(self) -> None:
+        self.archived = True
+        self.active = False
+        self.updated_at = datetime.now()
+
+    def activate(self) -> None:
+        self.archived = False
+        self.active = True
+        self.updated_at = datetime.now()

@@ -1,12 +1,20 @@
 """
-Conversation Message
---------------------
+Conversation Message Domain Model.
 
-Định nghĩa một tin nhắn trong cuộc hội thoại.
+Định nghĩa một tin nhắn trong cuộc hội thoại
+giữa người dùng và AI.
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Literal
+
+
+ConversationRole = Literal[
+    "system",
+    "user",
+    "assistant",
+]
 
 
 @dataclass(slots=True)
@@ -19,7 +27,7 @@ class ConversationMessage:
     # Identity
     # =====================================================
 
-    role: str
+    role: ConversationRole
 
     content: str
 
@@ -44,46 +52,56 @@ class ConversationMessage:
     error: bool = False
 
     # =====================================================
+    # Validation
+    # =====================================================
+
+    def __post_init__(self) -> None:
+        if self.role not in {
+            "system",
+            "user",
+            "assistant",
+        }:
+            raise ValueError(
+                f"Role không hợp lệ: {self.role}"
+            )
+
+        if not isinstance(self.content, str):
+            raise TypeError(
+                "ConversationMessage.content phải là str."
+            )
+
+        if not self.content.strip():
+            raise ValueError(
+                "ConversationMessage.content không được rỗng."
+            )
+
+        if self.tokens < 0:
+            raise ValueError(
+                "tokens không được âm."
+            )
+
+    # =====================================================
     # Helpers
     # =====================================================
 
     def is_user(self) -> bool:
-        """
-        Kiểm tra message của người dùng.
-        """
-
         return self.role == "user"
 
     def is_assistant(self) -> bool:
-        """
-        Kiểm tra message của AI.
-        """
-
         return self.role == "assistant"
 
     def is_system(self) -> bool:
-        """
-        Kiểm tra System Prompt.
-        """
-
         return self.role == "system"
 
     def has_content(self) -> bool:
-        """
-        Kiểm tra nội dung có rỗng không.
-        """
-
-        return bool(
-            self.content.strip()
-        )
+        return bool(self.content.strip())
 
     def preview(
         self,
         length: int = 80,
     ) -> str:
-        """
-        Trả về nội dung rút gọn.
-        """
+        if length <= 0:
+            return ""
 
         text = self.content.strip()
 

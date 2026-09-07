@@ -75,6 +75,10 @@ from app.knowledge.citation import (
     CitationService,
 )
 
+from app.conversation.conversation_history import (
+    ConversationHistory,
+)
+
 
 # =========================================================
 # EXCEPTIONS
@@ -534,9 +538,40 @@ class AssistantService:
     # ANSWER
     # =====================================================
 
+    @staticmethod
+    def _build_memory_question(
+        question: str,
+        history: ConversationHistory | None,
+    ) -> str:
+        """
+        Kết hợp lịch sử hội thoại với câu hỏi hiện tại.
+
+        History được đưa vào RAG prompt thông qua question mở rộng.
+        Cách này giữ nguyên RAGService hiện tại và không phá vỡ
+        backward compatibility của answer(question).
+        """
+
+        normalized_question = question.strip()
+
+        if history is None or history.is_empty():
+            return normalized_question
+
+        history_prompt = history.to_prompt().strip()
+
+        if not history_prompt:
+            return normalized_question
+
+        return (
+            "[CONVERSATION HISTORY]\n"
+            f"{history_prompt}\n\n"
+            "[CURRENT QUESTION]\n"
+            f"{normalized_question}"
+        )
+
     def answer(
         self,
         question: str,
+        history: ConversationHistory | None = None,
     ) -> AssistantResponse:
         """
         Điều phối toàn bộ Assistant pipeline.
@@ -578,6 +613,11 @@ class AssistantService:
             )
         )
 
+        memory_question = self._build_memory_question(
+            normalized_question,
+            history,
+        )
+
         # =================================================
         # RAG + CITATION
         # =================================================
@@ -585,7 +625,7 @@ class AssistantService:
         if self.rag_service is not None:
 
             rag_result = self.rag(
-                normalized_question
+                memory_question
             )
 
             # -------------------------------------------------
@@ -683,9 +723,18 @@ class AssistantService:
                 }
             )
 
+            metadata["memory_enabled"] = history is not None
+            metadata["history_message_count"] = (
+                history.count() if history is not None else 0
+            )
+            metadata["history_used"] = (
+                history is not None
+                and not history.is_empty()
+            )
+
             return AssistantResponse(
                 answer=rag_result.answer,
-                query=rag_result.question,
+                query=normalized_question,
                 citations=citations,
                 metadata=metadata,
             )

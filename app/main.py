@@ -1,6 +1,4 @@
 """
-Application entry point.
-
 Hành Chính AI
 Sprint 12
 
@@ -47,6 +45,30 @@ from app.api.routes.assistant import (
     router as assistant_router,
 )
 
+from app.api.routes.ocr import (
+    router as ocr_router,
+)
+
+from app.api.routes.voice import (
+    configure_voice_ai_service,
+    router as voice_router,
+)
+
+from app.api.routes.voice_document import (
+    router as voice_document_router,
+)
+from app.api.routes.voice_conversation import (
+    router as voice_conversation_router,
+)
+
+from app.ocr.runtime import (
+    configure_ocr_ai_service,
+)
+
+from app.ocr.rag_runtime import (
+    configure_ocr_rag_service,
+)
+
 from app.core.config import (
     APP_NAME,
     APP_VERSION,
@@ -88,6 +110,10 @@ from app.knowledge.vectorstore import (
 from app.providers.provider_factory import (
     ProviderFactory,
 )
+
+from app.conversation.conversation_service import ConversationService
+from app.api.routes.assistant import configure_conversation_service
+from app.voice.ai import VoiceAIService
 
 
 # ============================================================
@@ -369,6 +395,28 @@ configure_assistant_service(
     assistant_service
 )
 
+conversation_service = ConversationService()
+
+configure_conversation_service(
+    conversation_service
+)
+
+configure_ocr_ai_service(
+    assistant_service
+)
+
+configure_ocr_rag_service(
+    assistant_service
+)
+
+voice_ai_service = VoiceAIService(
+    assistant_service,
+)
+
+configure_voice_ai_service(
+    voice_ai_service
+)
+
 
 # ============================================================
 # API ROUTERS
@@ -388,6 +436,22 @@ app.include_router(
 
 app.include_router(
     assistant_router
+)
+
+app.include_router(
+    ocr_router
+)
+
+app.include_router(
+    voice_router
+)
+
+app.include_router(
+    voice_document_router
+)
+
+app.include_router(
+    voice_conversation_router
 )
 
 
