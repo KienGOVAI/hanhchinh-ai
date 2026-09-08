@@ -15,8 +15,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.ocr.models import OCRDocument
-
 
 class OCRBlockResponse(BaseModel):
     """Một block OCR trong một trang."""
@@ -68,7 +66,9 @@ class OCRPageResponse(BaseModel):
 
 
 class OCRUploadResponse(BaseModel):
-    """Response chuẩn sau khi upload và thực hiện OCR."""
+    """
+    Response chuẩn sau khi upload và thực hiện OCR.
+    """
 
     success: bool = True
 
@@ -107,42 +107,3 @@ class OCRUploadResponse(BaseModel):
         default_factory=dict,
         description="Metadata của kết quả OCR.",
     )
-
-    @classmethod
-    def from_ocr_document(
-        cls,
-        document: OCRDocument,
-        *,
-        filename: str,
-        content_type: str | None,
-        file_size: int,
-        file_path: str,
-    ) -> "OCRUploadResponse":
-        """Chuyển OCRDocument thành API response chuẩn."""
-
-        return cls(
-            success=True,
-            filename=filename,
-            content_type=content_type,
-            file_size=file_size,
-            file_path=file_path,
-            text=document.text,
-            pages=[
-                OCRPageResponse(
-                    page_number=page.page_number,
-                    text=page.text,
-                    confidence=page.confidence,
-                    blocks=[
-                        OCRBlockResponse(
-                            text=block.text,
-                            confidence=block.confidence,
-                            metadata=block.metadata,
-                        )
-                        for block in page.blocks
-                    ],
-                    metadata=page.metadata,
-                )
-                for page in document.pages
-            ],
-            metadata=document.metadata,
-        )
