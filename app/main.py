@@ -1,28 +1,8 @@
 ﻿"""
 Hành Chính AI
-Sprint 12
+Sprint 17
 
-Assistant Runtime - Task 12.14.9 Layer 1.
-
-Pipeline:
-
-    HTTP
-      ↓
-    AssistantService
-      ↓
-    DemoEmbeddingProvider
-      ↓
-    Retriever
-      ↓
-    ContextBuilder
-      ↓
-    RAGService
-      ↓
-    AI Provider
-      ↓
-    CitationService
-      ↓
-    Answer + Citations
+Authentication Runtime - Login / JWT / RBAC / Protected API.
 """
 
 from __future__ import annotations
@@ -42,6 +22,7 @@ from app.api.routes.knowledge import (
 
 from app.api.routes.assistant import (
     configure_assistant_service,
+    configure_conversation_service,
     router as assistant_router,
 )
 
@@ -57,8 +38,22 @@ from app.api.routes.voice import (
 from app.api.routes.voice_document import (
     router as voice_document_router,
 )
+
 from app.api.routes.voice_conversation import (
     router as voice_conversation_router,
+)
+
+from app.api.routes.workflow import (
+    router as workflow_router,
+)
+
+from app.api.routes.auth import (
+    configure_auth_services,
+    router as auth_router,
+)
+
+from app.api.routes.protected import (
+    router as protected_router,
 )
 
 from app.ocr.runtime import (
@@ -68,6 +63,9 @@ from app.ocr.runtime import (
 from app.ocr.rag_runtime import (
     configure_ocr_rag_service,
 )
+
+from app.auth.jwt import JWTService
+from app.auth.service import UserService
 
 from app.core.config import (
     APP_NAME,
@@ -111,10 +109,13 @@ from app.providers.provider_factory import (
     ProviderFactory,
 )
 
-from app.api.routes.workflow import router as workflow_router
-from app.conversation.conversation_service import ConversationService
-from app.api.routes.assistant import configure_conversation_service
-from app.voice.ai import VoiceAIService
+from app.conversation.conversation_service import (
+    ConversationService,
+)
+
+from app.voice.ai import (
+    VoiceAIService,
+)
 
 
 # ============================================================
@@ -396,11 +397,21 @@ configure_assistant_service(
     assistant_service
 )
 
+
+# ============================================================
+# CONVERSATION RUNTIME
+# ============================================================
+
 conversation_service = ConversationService()
 
 configure_conversation_service(
     conversation_service
 )
+
+
+# ============================================================
+# OCR RUNTIME
+# ============================================================
 
 configure_ocr_ai_service(
     assistant_service
@@ -410,12 +421,31 @@ configure_ocr_rag_service(
     assistant_service
 )
 
+
+# ============================================================
+# VOICE RUNTIME
+# ============================================================
+
 voice_ai_service = VoiceAIService(
     assistant_service,
 )
 
 configure_voice_ai_service(
     voice_ai_service
+)
+
+
+# ============================================================
+# AUTH RUNTIME
+# ============================================================
+
+auth_user_service = UserService()
+
+auth_jwt_service = JWTService()
+
+configure_auth_services(
+    auth_user_service,
+    auth_jwt_service,
 )
 
 
@@ -459,6 +489,14 @@ app.include_router(
     workflow_router
 )
 
+app.include_router(
+    auth_router
+)
+
+app.include_router(
+    protected_router
+)
+
 
 # ============================================================
 # HOME
@@ -474,4 +512,3 @@ def home():
             "Chào mừng bạn đến với Hành Chính AI!"
         ),
     }
-
