@@ -1,4 +1,4 @@
-"""
+﻿"""
 Hành Chính AI
 Sprint 12
 
@@ -111,6 +111,7 @@ from app.providers.provider_factory import (
     ProviderFactory,
 )
 
+from app.api.routes.workflow import router as workflow_router
 from app.conversation.conversation_service import ConversationService
 from app.api.routes.assistant import configure_conversation_service
 from app.voice.ai import VoiceAIService
@@ -454,6 +455,10 @@ app.include_router(
     voice_conversation_router
 )
 
+app.include_router(
+    workflow_router
+)
+
 
 # ============================================================
 # HOME
@@ -469,3 +474,4 @@ def home():
             "Chào mừng bạn đến với Hành Chính AI!"
         ),
     }
+
